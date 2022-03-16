@@ -1,0 +1,11 @@
+{
+    "dbConfig": { 
+        "hostUri": "mongodb://localhost:27017/kododb?authSource=admin"
+    },
+    "log": {
+        "level": "debug",
+        "service": "FMS Service"
+    },
+    "SESSION_SECRET": "jatin-software",
+    "APP_URL": ["http://localhost:4040"]
+}
