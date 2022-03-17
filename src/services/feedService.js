@@ -49,21 +49,16 @@ class ApiFeature {
   
   
     sort() {
-      if (this.filter.searchKey) {
-        return this;
-      } else if (this.queryString.sort) {
-        const sortBy = this.queryString.sort.split(',').join(' ');
-        console.log('Soprtby',sortBy)
-        this.query = this.query.sort(sortBy);
-      } else {
-        this.query = this.query.sort(FILTER_SEARCH_KEYS.SORT_BY_LAST_UPDATE);
-      }
-      return this;
+        if (this.queryString.sort) {
+            const sortBy = this.queryString.sort.split(',').join(' ');
+            console.log('Soprtby',sortBy)
+            this.query = this.query.sort(sortBy);
+            return this;
+        }
     }
-  
     paginate() {
-      if (this.queryString.page && this.queryString.limit) {
-        const page = this.queryString.page * 1 || 1;
+      if (this.queryString.pageNumbers && this.queryString.limit) {
+        const page = this.queryString.pageNumbers * 1 || 1;
         let limit = this.queryString.limit * 1 || 10;
         const skip = (page - 1) * limit;
         this.query = this.query.skip(skip).limit(limit);
@@ -72,7 +67,7 @@ class ApiFeature {
     }
   
     filterSearch() {
-      if (this.filter.searchKey) {
+      if (this.filter && this.filter.searchKey) {
         this.query = this.query.where({ $text: { $search: this.filter.searchKey }});
       }
       return this;

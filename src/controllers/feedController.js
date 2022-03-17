@@ -15,19 +15,19 @@ exports.getFeed = async (req, res, next) => {
         const body = {...req.body};
 
         let feeds = [];
-        console.log('body.filter.searchKey 1',body.filter.searchKey);
+        // console.log('body.filter.searchKey 1',body.filter.searchKey);
         if(body.filter && body.filter.searchKey) {
-            body.filter.searchKey = '"' + body.filter.searchKey.split(",").map(function(item) {
-                return item.trim();
-            }).join('" "') + '"';
-            // if(body.filter.searchKey.includes(''')){
-
-            // }
+            // body.filter.searchKey = '"' + body.filter.searchKey.split(",").map(function(item) {
+            //     return item.trim();
+            // }).join('" "') + '"';
+            if(body.filter.searchKey.includes(`'`)){
+                body.filter.searchKey = `"` + body.filter.searchKey.substring(1,body.filter.searchKey.length-1) + `"`;
+            }
         }
-        console.log('body.filter.searchKey 2',body.filter.searchKey);
+        // console.log('body.filter.searchKey 2',body.filter.searchKey);
         // Fetch total count of Feed via filter query.
         const totalFeeds = await feedService.getFeedCount(body, queryParams);
-        console.log('Total Feed',totalFeeds);
+        // console.log('Total Feed',totalFeeds);
         // Fetch data of Feed via filter query.
         feeds = await feedService.findFeedBySearchFilter(body, queryParams);
         // Return response.
