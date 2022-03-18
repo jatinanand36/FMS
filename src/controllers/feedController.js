@@ -1,33 +1,22 @@
 const logger = require('../utils/logging');
 const ApiError = require('../utils/apiError');
 const { log, response } = require('../../locale/messages');
-const { HTTP_CODES, RESPONSE_STATUS, FILTER_SEARCH_KEYS } = require('../../locale/constant');
+const { HTTP_CODES, RESPONSE_STATUS } = require('../../locale/constant');
 const feedService = require('../services/feedService'); 
-// const kolUtil = require('../utils/kolUtil');
-const mongoose = require('mongoose');
+const feedUtil = require('../utils/feedUtil');
 
 // This API is used to search or filter on Feed DB.
 exports.getFeed = async (req, res, next) => {
-
     logger.info({ payload: req.body}, log.info.fetchDetailListOfFeed);
     try {
         const queryParams = {...req.query}; 
         const body = {...req.body};
 
-        let feeds = [];
-        // console.log('body.filter.searchKey 1',body.filter.searchKey);
-        if(body.filter && body.filter.searchKey) {
-            // body.filter.searchKey = '"' + body.filter.searchKey.split(",").map(function(item) {
-            //     return item.trim();
-            // }).join('" "') + '"';
-            if(body.filter.searchKey.includes(`'`)){
-                body.filter.searchKey = `"` + body.filter.searchKey.substring(1,body.filter.searchKey.length-1) + `"`;
-            }
-        }
-        // console.log('body.filter.searchKey 2',body.filter.searchKey);
+        let feeds = []; 
+        // Parse searchKey String in case of qotes.
+        body.filter && body.filter.searchKey ? body.filter.searchKey = feedUtil.parseSerchKeyQuotes(body.filter.searchKey) : null;
         // Fetch total count of Feed via filter query.
         const totalFeeds = await feedService.getFeedCount(body, queryParams);
-        // console.log('Total Feed',totalFeeds);
         // Fetch data of Feed via filter query.
         feeds = await feedService.findFeedBySearchFilter(body, queryParams);
         // Return response.

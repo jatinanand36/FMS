@@ -1,12 +1,10 @@
-const Feeds = require('../models/feeds');
-const { COLLATION, FILTER_SEARCH_KEYS } = require('../../locale/constant');
-const mongoose = require('mongoose');
+const Feeds = require('../models/feeds'); 
 
 // It is used to get the count of Feeds via applied filter query.
 const getFeedCount = (body, queryParams) => {
     const queryParamsWithoutPagination = {...queryParams};
-    if(queryParamsWithoutPagination.page)
-        delete queryParamsWithoutPagination.page;
+    if(queryParamsWithoutPagination.pageNumbers)
+        delete queryParamsWithoutPagination.pageNumbers;
     
     if(queryParamsWithoutPagination.limit)
         delete queryParamsWithoutPagination.limit;
@@ -14,13 +12,14 @@ const getFeedCount = (body, queryParams) => {
     return findFeedBySearchFilter(body, queryParamsWithoutPagination).countDocuments();
 }
 
+// It is used to get feeds via applied filter query.
 const findFeedBySearchFilter = (body, queryParams) => {
-    let query = Feeds.find({},{affiliation:0});
-    console.log('Query PArams',queryParams);
+    let query = Feeds.find({},{affiliation:0}); 
     const features = new ApiFeature(query, queryParams, body)
       .filterSearch()
       .sort()
       .paginate()
+
     return features.query;
 }
 
@@ -31,30 +30,12 @@ class ApiFeature {
       this.filter = body.filter;
     }
   
-    filter() {
-      const queryObj = { ...this.queryString };
-      console.log('queryObj',queryObj );
-      const excludedFields = [FILTER_SEARCH_KEYS.PAGE, FILTER_SEARCH_KEYS.SORT, FILTER_SEARCH_KEYS.LIMIT];
-      excludedFields.forEach(el => delete queryObj[el]);
-      
-      // Advanced filtering
-      let queryStr = JSON.stringify(queryObj);
-      console.log('queryStr 1',queryStr);
-      queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-      console.log('queryStr 2',queryStr);
-      this.query = this.query.find(JSON.parse(queryStr));
-  
-      return this;
-    }
-  
-  
     sort() {
         if (this.queryString.sort) {
             const sortBy = this.queryString.sort.split(',').join(' ');
-            console.log('Soprtby',sortBy)
             this.query = this.query.sort(sortBy);
-            return this;
         }
+        return this;
     }
     paginate() {
       if (this.queryString.pageNumbers && this.queryString.limit) {
@@ -74,7 +55,6 @@ class ApiFeature {
     }
    
 }
-
 
 module.exports = {
     findFeedBySearchFilter, getFeedCount
