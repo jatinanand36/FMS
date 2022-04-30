@@ -5,7 +5,10 @@ Joi.objectId = require('joi-objectid')(Joi);
 const filterSearchFeedList = {
     body: Joi.object().keys({ 
         filter : Joi.object().keys({
-            searchKey:  Joi.string().allow('', null) 
+            searchKey:  Joi.string().allow('', null),
+            pageNumber: Joi.number().positive(),
+            limit:  Joi.number().positive(),
+            sort: Joi.array().items(Joi.string().allow(null).allow(''))
         })
     })
 }

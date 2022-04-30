@@ -1,62 +1,79 @@
-const Feeds = require('../models/feeds'); 
+const feeds = require('../../assets/jsons/mock_data.json'); 
 
-// It is used to get the count of Feeds via applied filter query.
-const getFeedCount = (body, queryParams) => {
-    const queryParamsWithoutPagination = {...queryParams};
-    if(queryParamsWithoutPagination.pageNumbers)
-        delete queryParamsWithoutPagination.pageNumbers;
-    
-    if(queryParamsWithoutPagination.limit)
-        delete queryParamsWithoutPagination.limit;
-  
-    return findFeedBySearchFilter(body, queryParamsWithoutPagination).countDocuments();
-}
-
-// It is used to get feeds via applied filter query.
-const findFeedBySearchFilter = (body, queryParams) => {
-    let query = Feeds.find({},{affiliation:0}); 
-    const features = new ApiFeature(query, queryParams, body)
-      .filterSearch()
-      .sort()
-      .paginate()
-
-    return features.query;
-}
-
-class ApiFeature {
-    constructor(query, queryString, body) {  
-      this.query = query;
-      this.queryString = queryString;
-      this.filter = body.filter;
+const inMemoryOperations = {
+  pagination: (array, page, limit) => {
+    let feedsOfFeeds = [];
+    while (array.length) {
+      feedsOfFeeds.push(array.splice(0, limit))
     }
-  
-    sort() {
-        if (this.queryString.sort) {
-            const sortBy = this.queryString.sort.split(',').join(' ');
-            this.query = this.query.sort(sortBy);
+    return feedsOfFeeds[page - 1] || [];
+  },
+  sort: (array, key) => {
+    return array.sort(function (a, b) {
+      let first = a[key];
+      let second = b[key];
+      return ((first < second) ? -1 : ((first > second) ? 1 : 0));
+    });
+  }
+}
+
+const findFeedBySearchFilter = (body) => {
+  let search = body.filter && body.filter.searchKey ? body.filter.searchKey : '';
+  let sort = body.filter && body.filter.sort ? body.filter.sort : [];
+  let pageNumber = body.filter && body.filter.pageNumber ? body.filter.pageNumber : '';
+  let limit = body.filter && body.filter.limit ? body.filter.limit : [];
+  let arrayString = [];
+ 
+  let searchedArr = [];
+  if (search.length) {
+    if (search[0] == `"` && search[search.length - 1] == `"`) {
+      // DOUBLE QUOTED
+      arrayString = search.substring(1, search.length - 1).split(" ");
+      searchedArr = feeds.filter((i) => {
+        let flag1, flag2, f1 = [], f2 = [];
+        for (let j of arrayString) {
+          flag1 = flag1 || i.description.includes(j);
+          flag2 = flag2 || i.name.includes(j);
         }
-        return this;
+        return flag1 || flag2;
+      })
+    } else {
+      // SINGLE QUOTED
+      arrayString = search.split(" ");
+      searchedArr = feeds.filter((i) => {
+        let flag1, flag2, f1 = [], f2 = [];
+        for (let j of arrayString) {
+          flag1 = flag1 || i.description.toLocaleLowerCase().includes(j.toLowerCase());
+          flag2 = flag2 || i.name.toLocaleLowerCase().includes(j.toLowerCase());
+        }
+        return flag1 || flag2;
+      })
     }
-    paginate() {
-      if (this.queryString.pageNumbers && this.queryString.limit) {
-        const page = this.queryString.pageNumbers * 1 || 1;
-        let limit = this.queryString.limit * 1 || 10;
-        const skip = (page - 1) * limit;
-        this.query = this.query.skip(skip).limit(limit);
-      }
-      return this;
+  } else {
+    searchedArr = [...feeds];
+  }
+
+  // Pagination
+  let paginatedArr = [...searchedArr];
+  if (pageNumber && limit) {
+    paginatedArr = inMemoryOperations.pagination(paginatedArr, pageNumber, limit);
+  }
+
+  // Sort
+  let sortedArr = [...paginatedArr];
+  if (paginatedArr.length) {
+    for (let i of sort) {
+      sortedArr = inMemoryOperations.sort(paginatedArr, i);
     }
-  
-    filterSearch() {
-      if (this.filter && this.filter.searchKey) {
-        this.query = this.query.where({ $text: { $search: this.filter.searchKey }});
-      }
-      return this;
-    }
-   
+  }
+  return {
+    searched : sortedArr,
+    total : searchedArr.length
+  };
 }
+
 
 module.exports = {
-    findFeedBySearchFilter, getFeedCount
+    findFeedBySearchFilter
 };
 

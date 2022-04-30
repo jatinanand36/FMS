@@ -18,7 +18,7 @@ describe('Tasks API', ()=> {
             let feedSearch = {
             };
             chai.request(server)
-            .post('/v1/fms/feed/list?pageNumbers=2&sort=name,dateLastEdited&limit=10')
+            .post('/v1/fms/feed/list')
             .send(feedSearch)
             .end((err, response)=> { 
                 response.should.have.status(200);

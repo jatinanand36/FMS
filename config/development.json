@@ -1,6 +1,6 @@
 {
     "dbConfig": { 
-        "hostUri": "mongodb://localhost:27017/kododb?authSource=admin"
+        "hostUri": ""
     },
     "log": {
         "level": "debug",

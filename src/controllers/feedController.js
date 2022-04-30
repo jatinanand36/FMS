@@ -9,18 +9,14 @@ const feedUtil = require('../utils/feedUtil');
 exports.getFeed = async (req, res, next) => {
     logger.info({ payload: req.body}, log.info.fetchDetailListOfFeed);
     try {
-        const queryParams = {...req.query}; 
         const body = {...req.body};
 
-        let feeds = []; 
         // Parse searchKey String in case of qotes.
         body.filter && body.filter.searchKey ? body.filter.searchKey = feedUtil.parseSerchKeyQuotes(body.filter.searchKey) : null;
-        // Fetch total count of Feed via filter query.
-        const totalFeeds = await feedService.getFeedCount(body, queryParams);
         // Fetch data of Feed via filter query.
-        feeds = await feedService.findFeedBySearchFilter(body, queryParams);
+        let result = await feedService.findFeedBySearchFilter(body);
         // Return response.
-        return res.status(HTTP_CODES.OK).json({ status:  RESPONSE_STATUS.SUCCESS , msg: response.detailList, total: totalFeeds, data: feeds });
+        return res.status(HTTP_CODES.OK).json({ status:  RESPONSE_STATUS.SUCCESS , msg: response.detailList, total: result.total, data: result.searched });
 
     }catch (err) { 
         logger.error({ err }, log.error.fetchFeedDetails);
